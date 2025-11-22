@@ -9,17 +9,19 @@ function db() {
     $pass = $_ENV['DB_PASS'];
     $sslmode = $_ENV['DB_SSL'];
 
+    $endpoint = explode('.', $host)[0];  
+
+    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=$sslmode;options=endpoint=$endpoint";
+
     try {
         return new PDO(
-            "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=$sslmode",
+            $dsn,
             $user,
             $pass,
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
         );
-    } catch (Exception $e) {
-        echo json_encode([
-            "error" => $e->getMessage()
-        ]);
+    } catch (PDOException $e) {
+        echo json_encode(["error" => $e->getMessage()]);
         exit;
     }
 }
