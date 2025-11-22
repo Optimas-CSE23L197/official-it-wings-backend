@@ -1,26 +1,29 @@
-# Use official PHP 8.2 + Apache image
 FROM php:8.2-apache
 
-# Install necessary extensions
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     libpq-dev \
+    unzip \
+    git \
     && docker-php-ext-install pdo pdo_pgsql pgsql
 
-# Enable Apache modules
+# Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Copy project files into container
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copy app code
 COPY . /var/www/html/
 
-# Set working directory
 WORKDIR /var/www/html/
 
-# Set file permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+# Install PHP dependencies
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Expose port 80
+# Fix permissions
+RUN chown -R www-data:www-data /var/www/html
+
 EXPOSE 80
 
-# Start Apache
 CMD ["apache2-foreground"]
